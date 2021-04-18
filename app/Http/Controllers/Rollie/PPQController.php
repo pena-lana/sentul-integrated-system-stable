@@ -32,16 +32,57 @@ class PPQController extends ResourceController
 
 
 
-    public static function createDraftPPQ($jenis_ppq,$params_id)
+    public static function createDraftPPQ($jenis_ppq,$rpd_filling_detail_pi_after,$rpd_filling_detail_pi_before)
     {
         switch ($jenis_ppq)
         {
             case 'Package Integrity':
-                $rpd_filling_detail_pi_id       = $params_id; /* params id OK after #ok */
-
                 $nomor_ppq                      = self::getNomorPPQ();
-                $rpd_filling_detail_pi          = RPDFillingDetailPi::find($rpd_filling_detail_pi_id);
-                dd($rpd_filling_detail_pi);
+                $rpd_filling_detail_pi_after    = $rpd_filling_detail_pi_after; /* Rpd filling detail after #OK  */
+                $rpd_filling_detail_pi_before   = $rpd_filling_detail_pi_before; /* Rpd filling detail before #OK  */
+                $cpp_head                       = $rpd_filling_detail_pi_before->woNumber->cppHead;
+                $cpp_head_id                    = null;
+                if (!is_null($cpp_head))
+                {
+                    $cpp_head_id                = $cpp_head->id;
+                }
+                $check_cpp_details              = $rpd_filling_detail_pi_before->woNumber->cppDetails;
+                $jumlah_pack                    = 0;
+                $palets 				        = NULL;
+                if (!is_null($check_cpp_details))
+                {
+                    $cpp_detail                 = $check_cpp_details->where('filling_machine_id',$rpd_filling_detail_pi_before->filling_machine_id)->first();
+                }
+
+                $jam_awal_ppq                   = $rpd_filling_detail_pi_before->filling_date.' '.$rpd_filling_detail_pi_before->filling_time;
+                $jam_akhir_ppq                  = $rpd_filling_detail_pi_after->filling_date.' '.$rpd_filling_detail_pi_after->filling_time;
+
+                try {
+                    DB::beginTransaction();
+                    $ppq                            = PPQ::create([
+                        'rpd_filling_detail_pi_id'  => $rpd_filling_detail_pi_after->id, /* RPD Filling ID OK After #OK  */
+                        'cpp_head_id'               => $cpp_head_id,
+                        'nomor_ppq'                 => $nomor_ppq,
+                        'ppq_date'                  => date('Y-m-d'),
+                        'jam_awal_ppq'              => $jam_awal_ppq,
+                        'jam_akhir_ppq'             => $jam_akhir_ppq,
+                        'jumlah_pack'               => $jumlah_pack,
+                        'status_akhir'              => '5' /* Set As Draft PPQ */
+                    ]);
+                    DB::commit();
+                    return [
+                        'status'    => '00',
+                        'message'   => 'Draft PPQ Berhasil Dibuat',
+                        'data'      => $ppq
+                    ];
+                }
+                catch (\Exception $e)
+                {
+                    return [
+                        'status'    => '01',
+                        'message'   => $e->getMessage()
+                    ];
+                }
             break;
         }
     }

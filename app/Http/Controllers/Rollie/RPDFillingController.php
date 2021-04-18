@@ -10,11 +10,14 @@ use App\Models\Master\FillingMachineGroupHead;
 use App\Models\Master\FillingMachineGroupDetail;
 use App\Models\Master\Brand;
 use App\Models\Master\Subbrand;
+use App\Models\Master\JenisPpq;
+use App\Models\Master\KategoriPpq;
 
 use App\Models\Transaction\Rollie\WoNumber;
 use App\Models\Transaction\Rollie\RPDFillingHead;
 use App\Models\Transaction\Rollie\RPDFillingDetailPi;
 use App\Models\Transaction\Rollie\RPDFillingDetailPiAtEvent;
+use App\Models\Transaction\Rollie\PPQ;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\ResourceController;
@@ -862,9 +865,26 @@ class RPDFillingController extends ResourceController
                     $key_sampel_active    = array_search($rpd_filling_detail_pi->id,array_column($rpd_filling_details,'id'));
                     if ($rpd_filling_details[$key_sampel_active-1]->status_akhir == '#OK')
                     {
-                        $make_ppq  = PPQController::createDraftPPQ("Package Integrity",$rpd_filling_detail_pi);
-                        dd($make_ppq);
-                        $view   =  (string)View::make($this->route.'._form_ppq_pi');
+                        if ($key_sampel_active-2 < 0)
+                        {
+                            $rpd_filling_detail_pi_ok_sebelum_not_ok    = 'Sampel A #OK';
+                        }
+                        else
+                        {
+                            for ($i=$key_sampel_active-1; $i > -1 ; $i--)
+                            {
+                                if ($rpd_filling_details[$i]->status_akhir == 'OK')
+                                {
+                                    $rpd_filling_detail_pi_ok_sebelum_not_ok    = RPDFillingDetailPi::find($rpd_filling_details[$i]->id);
+                                }
+                            }
+                        }
+                        $ppq            = PPQ::find('7');
+
+                        $jenis_ppq      = JenisPpq::where('jenis_ppq','Package Integrity')->first();
+                        $kategori_ppqs  = $this->encryptId($jenis_ppq->kategoriPpqs);
+                        // $ppq    = PPQController::createDraftPPQ("Package Integrity",$rpd_filling_detail_pi,$rpd_filling_detail_pi_ok_sebelum_not_ok);
+                        $view   =  (string)View::make($this->route.'._form_ppq_pi',['ppq'=>$ppq/* ['data'] */,'kategori_ppqs'=>$kategori_ppqs]);
                         return [
                             'status'    => '00',
                             'ppq'       => true,
@@ -975,5 +995,10 @@ class RPDFillingController extends ResourceController
         {
             return $accessCheck;
         }
+    }
+
+    public function submitPpq(Request $request)
+    {
+        dd($request->all());
     }
 }

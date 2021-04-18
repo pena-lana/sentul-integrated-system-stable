@@ -300,6 +300,7 @@ Route::group(['prefix' => 'rollie','middleware'=>['auth','credential.check']], f
         Route::post('analisa-filling-sampel-modal', 'Rollie\RPDFillingController@analisaFillingSampelModal');
         Route::post('analisa-filling-sampel', 'Rollie\RPDFillingController@analisaFillingSampel');
         Route::post('analisa-filling-sampel-event', 'Rollie\RPDFillingController@analisaFillingSampelEvent');
+        Route::post('submit-ppq', 'Rollie\RPDFillingController@submitPpq');
 
     });
 });

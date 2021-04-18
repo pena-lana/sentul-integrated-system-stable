@@ -15,7 +15,7 @@ class PPQ extends ResourceModel
         parent::boot();
     }
 
-    public function paletPpq()
+    public function paletPpqs()
     {
     	return $this->hasMany('App\Models\Transaction\Rollie\PaletPpq', 'ppq_id', 'id');
     }
